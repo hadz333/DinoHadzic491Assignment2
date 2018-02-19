@@ -8,6 +8,8 @@ var left_change = 0;
 var right_change = 0;
 var gameScore = 0;
 var background_speed = 3;
+var closest_from_right_x_value;
+var closest_from_left_x_value;
 
 function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
@@ -96,7 +98,7 @@ Background.prototype.update = function () {
 function Hero(game, spritesheet) {
     this.leftAnimation = new Animation(spritesheet, 0, 0, 28.28, 31, 0.15, 6, true, false);
     this.rightAnimation = new Animation(AM.getAsset("./img/hero_right.png"), 28.28, 0, 28.28, 31, 0.15, 6, true, true);
-    this.x = 100;
+    this.x = 255;
     this.y = 280;
     this.speed = 5;
     this.game = game;
@@ -122,55 +124,31 @@ Hero.prototype.update = function () {
     if (this.game.rightButton) {
       this.Right = true;
     } else {
-      if (this.x >= 650 || this.Left) {
-        right_change = 0;
+      if (this.Left) {
         this.Right = false;
       }
     }
-    if (this.Right) {
-      if (this.x < 650) {
-        this.x += this.speed;
-        right_change += this.speed;
-      } else {
-        right_change = 0;
-        this.Right = false;
-      }
+    if (this.Right && this.elapsedTime >= this.totalTime) {
+      Bullet_right();
     }
 
     if (this.game.leftButton) {
       this.Left = true;
     } else {
-      if (this.x <= -150 || this.Right) {
-        left_change = 0;
+      if (this.Right) {
         this.Left = false;
       }
     }
     if (this.Left) {
-      if (this.x > -150) {
-        this.x -= this.speed;
-        left_change += this.speed;
-      } else {
-        left_change = 0;
-        this.Left = false;
-      }
-    }
-
-    if (this.game.upButton) {
-      this.Up = true;
-    } else {
-      this.Up = false;
-    }
-    if (this.Up) {
-      this.y -= this.game.clockTick * this.speed;
+      Bullet_left();
     }
 }
 
-function Puncher(game, spritesheet) {
-    this.leftAnimation = new Animation(spritesheet, 0, 0, 61.25, 64, 0.07, 5, true, true);
-    this.rightAnimation = new Animation(spritesheet, 0, 64, 61.25, 64, 0.05, 5, true, true);
-    this.x = 10;
-    this.y = 265;
-    this.speed = 5;
+function Goomba_right(game, spritesheet) {
+    this.rightAnimation = new Animation(spritesheet, 0, 64, 61.25, 64, 0.07, 4, true, false);
+    this.x = -300;
+    this.y = 285;
+    this.speed = 1;
     this.game = game;
     this.Right = false;
     this.Left = false;
@@ -179,34 +157,47 @@ function Puncher(game, spritesheet) {
     this.ctx = game.ctx;
 }
 
-Puncher.prototype.draw = function () {
-  if (this.xButton) {
-    this.leftAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1.5);
-  } else {
-	   this.rightAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1.5);
-  }
+Goomba_right.prototype.draw = function () {
+    this.rightAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1);
 }
 
-Puncher.prototype.update = function () {
+Goomba_right.prototype.update = function () {
     //if (this.animation.elapsedTime < this.animation.totalTime * 8 / 14)
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
+    this.x += this.speed;
+}
 
-    if (this.game.xButton) {
-      this.xButton = true;
-    } else {
-      if (this.punchAnimation.isDone()) {
-          this.punchAnimation.elapsedTime = 0;
-          this.xButton = false;
-      }
-    }
-    if (this.xButton) {
-      if (this.punchAnimation.isDone()) {
-          this.punchAnimation.elapsedTime = 0;
-          this.xButton = false;
-      }
-    }
+function Goomba_left(game, spritesheet) {
+    this.leftAnimation = new Animation(spritesheet, 0, 0, 61.25, 64, 0.07, 4, true, false);
+    this.x = 800;
+    this.y = 285;
+    this.speed = 1;
+    this.game = game;
+    this.Right = false;
+    this.Left = false;
+    this.Up = false;
+    this.xButton = false;
+    this.ctx = game.ctx;
+}
 
+Goomba_left.prototype.draw = function () {
+    this.leftAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1);
+}
+
+Goomba_left.prototype.update = function () {
+    //if (this.animation.elapsedTime < this.animation.totalTime * 8 / 14)
+    //this.x += this.game.clockTick * this.speed;
+    //if (this.x > 400) this.x = 0;
+    this.x -= this.speed;
+}
+
+function Bullet_left() {
+
+}
+
+function Bullet_right() {
+  console.log("bullet right");
 }
 
 function Helicopter(game, spritesheet) {
@@ -235,7 +226,7 @@ AM.queueDownload("./img/rainy.gif");
 AM.queueDownload("./img/hero.png");
 AM.queueDownload("./img/hero_right.png");
 AM.queueDownload("./img/helicopter.png");
-// AM.queueDownload("./img/goomba_sheet.png");
+AM.queueDownload("./img/goomba_sheet.png");
 
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
@@ -247,7 +238,8 @@ AM.downloadAll(function () {
     gameEngine.addEntity(new Background(gameEngine, AM.getAsset("./img/rainy.gif")));
     gameEngine.addEntity(new Helicopter(gameEngine, AM.getAsset("./img/helicopter.png")));
     gameEngine.addEntity(new Hero(gameEngine, AM.getAsset("./img/hero.png")));
-    // gameEngine.addEntity(new Puncher(gameEngine, AM.getAsset("./img/goomba_sheet.png")));
+    gameEngine.addEntity(new Goomba_left(gameEngine, AM.getAsset("./img/goomba_sheet.png")));
+    gameEngine.addEntity(new Goomba_right(gameEngine, AM.getAsset("./img/goomba_sheet.png")));
 
     console.log("All Done!");
 });
