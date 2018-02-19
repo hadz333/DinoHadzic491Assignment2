@@ -126,7 +126,7 @@ Hero.prototype.update = function () {
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
 
-    if (closest_from_left_distance < closest_from_right_distance) {
+    if (closest_from_left_distance >= closest_from_right_distance) {
       this.Left = true;
       this.Right = false;
     } else {
@@ -168,7 +168,7 @@ Hero.prototype.update = function () {
 
 function Goomba_right(game, spritesheet) {
     this.rightAnimation = new Animation(spritesheet, 0, 64, 61.25, 64, 0.07, 4, true, false);
-    this.x = -300;
+    this.x = -700;
     this.y = 285;
     this.speed = 1;
     this.game = game;
@@ -190,7 +190,7 @@ Goomba_right.prototype.update = function () {
     this.x += this.speed;
     var distance = hero_x - this.x;
     if (distance < closest_from_right_distance) {
-      closest_from_right_distance = this.x;
+      closest_from_right_distance = distance;
     }
 }
 
@@ -218,7 +218,7 @@ Goomba_left.prototype.update = function () {
     this.x -= this.speed;
     var distance = this.x - hero_x;
     if (distance < closest_from_left_distance) {
-      closest_from_left_distance = this.x;
+      closest_from_left_distance = distance;
     }
 }
 
