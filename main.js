@@ -124,8 +124,8 @@ BoundingBox.prototype.collide = function (oth) {
 }
 
 function Hero(game, spritesheet) {
-    this.leftAnimation = new Animation(spritesheet, 0, 0, 28.28, 31, 0.15, 6, true, false);
-    this.rightAnimation = new Animation(AM.getAsset("./img/hero_right.png"), 28.28, 0, 28.28, 31, 0.15, 6, true, true);
+    this.leftAnimation = new Animation(spritesheet, 0, 0, 28.28, 31, 0.20, 6, true, false);
+    this.rightAnimation = new Animation(AM.getAsset("./img/hero_right.png"), 28.28, 0, 28.28, 31, 0.20, 6, true, true);
     this.x = 255;
     this.y = 280;
     this.speed = 5;
@@ -155,6 +155,7 @@ Hero.prototype.update = function () {
     //if (this.animation.elapsedTime < this.animation.totalTime * 8 / 14)
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
+    
     var closest_left_distance = 1000;
     var closest_right_distance = 1000;
     for (var i = 0; i < index; i++) {
@@ -189,7 +190,7 @@ Hero.prototype.update = function () {
     }
 
     this.currentTime += this.game.clockTick;
-    var type = Math.floor(Math.random() * 1000) + 1;
+    var type = Math.floor(Math.random() * 500) + 1;
     if (this.currentTime - this.prevTime2 >= type / 10) {
       var left_or_right = type % 2;
       switch (left_or_right) {
@@ -205,7 +206,7 @@ Hero.prototype.update = function () {
 
     if (this.Right) {
       // implement a timer here
-      if (this.currentTime - this.prevTime >= 0.9) {
+      if (this.currentTime - this.prevTime >= 1.2) {
     		gameEngine.addEntity(new Bullet_right(gameEngine));
         this.prevTime = this.currentTime;
     	}
@@ -213,7 +214,7 @@ Hero.prototype.update = function () {
 
     if (this.Left) {
       // implement a timer here
-      if (this.currentTime - this.prevTime >= 0.9) {
+      if (this.currentTime - this.prevTime >= 1.2) {
     		gameEngine.addEntity(new Bullet_left(gameEngine));
         this.prevTime = this.currentTime;
     	}
@@ -222,7 +223,7 @@ Hero.prototype.update = function () {
 
 function Goomba_right(game, spritesheet) {
     this.rightAnimation = new Animation(spritesheet, 0, 64, 61.25, 64, 0.07, 4, true, false);
-    this.x = -700;
+    this.x = -200;
     this.y = 285;
     this.speed = 1;
     this.game = game;
