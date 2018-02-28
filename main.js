@@ -21,6 +21,7 @@ var bullets = [];
 var goombas= [];
 var index = 0;
 var game_is_over = false;
+var goombas_destroyed = 0;
 
 function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
@@ -136,6 +137,29 @@ Game_over.prototype.draw = function () {
 Game_over.prototype.update = function () {
 };
 
+function Score(game, score, color, x, y) {
+	this.color = color;
+	this.x = x;
+	this.y = y;
+	this.ctx = game.ctx;
+	this.score = score;
+	this.ctx.font = "15px Arial";
+	this.ctx.fillStyle = color;
+	this.ctx.fillText("GOOMBAS KILLED: " + this.score, this.x, this.y);
+	Entity.call(this, game, x, y);
+}
+
+//Score.prototype = new Entity();
+Score.prototype.constructor = Score;
+Score.prototype.update = function() {
+	this.score = goombas_destroyed;
+	this.ctx.fillText("Goombas Killed: " + this.score, this.x, this.y);
+	//Entity.prototype.update.call(this);
+};
+Score.prototype.draw = function() {
+	this.ctx.fillText("Goombas Killed: " + this.score, this.x, this.y);
+};
+
 // collision detection
 function BoundingBox(x, y, width, height) {
     this.x = x;
@@ -173,7 +197,7 @@ function Hero(game, spritesheet) {
 }
 
 Hero.prototype.draw = function () {
-  if (this.live) {
+  if (this.live && !game_is_over) {
     if (this.Left) {
       this.leftAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 2.5);
     } else {
@@ -206,6 +230,7 @@ Hero.prototype.update = function () {
             // game over
             game_is_over = true;
             gameEngine.addEntity(new Game_over(gameEngine, AM.getAsset("./img/game_over_bg.png")));
+            gameEngine.addEntity(new Score(gameEngine, goombas_destroyed, "yellow", 390, 320));
           }
         }
       } else if (goombas[i].is_right && goombas[i].live) {
@@ -217,6 +242,7 @@ Hero.prototype.update = function () {
             // game over
             game_is_over = true;
             gameEngine.addEntity(new Game_over(gameEngine, AM.getAsset("./img/game_over_bg.png")));
+            gameEngine.addEntity(new Score(gameEngine, goombas_destroyed, "yellow", 390, 320));
           }
         }
       }
@@ -283,7 +309,7 @@ function Goomba_right(game, spritesheet) {
 }
 
 Goomba_right.prototype.draw = function () {
-  if (this.live) {
+  if (this.live && !game_is_over) {
     this.rightAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1);
   }
 }
@@ -332,7 +358,7 @@ function Goomba_left(game, spritesheet) {
 }
 
 Goomba_left.prototype.draw = function () {
-  if (this.live) {
+  if (this.live && !game_is_over) {
     this.leftAnimation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 1);
   }
 }
@@ -395,7 +421,10 @@ Bullet_left.prototype.update = function () {
           goombas[j].speed = 0;
           bullets[i].live = false;
           goombas[j].live = false;
-          console.log("shot one!");
+          if (!game_is_over) {
+            goombas_destroyed++;
+          }
+          console.log("Goombas destroyed:" + goombas_destroyed)
         }
       }
     }
@@ -443,7 +472,10 @@ Bullet_right.prototype.update = function () {
           goombas[j].speed = 0;
           bullets[i].live = false;
           goombas[j].live = false;
-          console.log("shot one!");
+          if (!game_is_over) {
+            goombas_destroyed++;
+          }
+          console.log("Goombas destroyed:" + goombas_destroyed);
         }
       }
     }
@@ -497,6 +529,7 @@ AM.downloadAll(function () {
     gameEngine.addEntity(new Hero(gameEngine, AM.getAsset("./img/hero.png")));
     gameEngine.addEntity(new Goomba_left(gameEngine, AM.getAsset("./img/goomba_sheet.png")));
     gameEngine.addEntity(new Goomba_right(gameEngine, AM.getAsset("./img/goomba_sheet.png")));
+    gameEngine.addEntity(new Score(gameEngine, goombas_destroyed, "yellow", 390, 320));
 
     console.log("All Done!");
 });
