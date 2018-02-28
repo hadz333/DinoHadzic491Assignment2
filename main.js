@@ -20,6 +20,7 @@ var num_bullets = 0;
 var bullets = [];
 var goombas= [];
 var index = 0;
+var game_is_over = false;
 
 function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
@@ -105,6 +106,36 @@ Background.prototype.draw = function () {
 Background.prototype.update = function () {
 };
 
+// no inheritance
+function Game_over(game, spritesheet) {
+    this.x = 0;
+    this.y = 0;
+    this.speed = 0;
+    this.spritesheet = spritesheet;
+    this.game = game;
+    this.ctx = game.ctx;
+};
+
+Game_over.prototype.draw = function () {
+    //this.ctx.drawImage(this.spritesheet,
+      //             this.x, this.y);
+      // Pan background
+      this.y += this.speed;
+      this.ctx.drawImage(this.spritesheet,
+                     this.x, this.y);
+
+      // Draw another image at the top edge of the first image
+      this.ctx.drawImage(this.spritesheet,
+                     this.x, this.y - sheetHeight);
+
+      // If the image scrolled off the screen, reset
+      if (this.y >= sheetHeight)
+        this.y = 0;
+};
+
+Game_over.prototype.update = function () {
+};
+
 // collision detection
 function BoundingBox(x, y, width, height) {
     this.x = x;
@@ -155,7 +186,7 @@ Hero.prototype.update = function () {
     //if (this.animation.elapsedTime < this.animation.totalTime * 8 / 14)
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
-    
+
     var closest_left_distance = 1000;
     var closest_right_distance = 1000;
     for (var i = 0; i < index; i++) {
@@ -170,13 +201,23 @@ Hero.prototype.update = function () {
         var distance = goombas[i].x - this.x;
         if (distance < closest_right_distance) {
           closest_right_distance = distance;
-          console.log("New closest from right: " + closest_right_distance);
+          //console.log("New closest from right: " + closest_right_distance);
+          if (closest_right_distance <= 2) {
+            // game over
+            game_is_over = true;
+            gameEngine.addEntity(new Game_over(gameEngine, AM.getAsset("./img/game_over_bg.png")));
+          }
         }
       } else if (goombas[i].is_right && goombas[i].live) {
         var distance = this.x - goombas[i].x;
         if (distance < closest_left_distance) {
           closest_left_distance = distance;
-          console.log("New closest from left: " + closest_left_distance);
+          //console.log("New closest from left: " + closest_left_distance);
+          if (closest_left_distance <= 2) {
+            // game over
+            game_is_over = true;
+            gameEngine.addEntity(new Game_over(gameEngine, AM.getAsset("./img/game_over_bg.png")));
+          }
         }
       }
     }
@@ -190,7 +231,7 @@ Hero.prototype.update = function () {
     }
 
     this.currentTime += this.game.clockTick;
-    var type = Math.floor(Math.random() * 500) + 1;
+    var type = Math.floor(Math.random() * 400) + 1;
     if (this.currentTime - this.prevTime2 >= type / 10) {
       var left_or_right = type % 2;
       switch (left_or_right) {
@@ -335,7 +376,7 @@ function Bullet_left(game) {
 }
 
 Bullet_left.prototype.draw = function () {
-  if (this.live) {
+  if (this.live && !game_is_over) {
     this.animation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 2);
   }
 }
@@ -383,7 +424,7 @@ function Bullet_right() {
 }
 
 Bullet_right.prototype.draw = function () {
-  if (this.live) {
+  if (this.live && !game_is_over) {
     this.animation.drawFrame(this.game.clockTick, this.ctx, this.x + 150, this.y + 100, 2);
   }
 }
@@ -442,6 +483,7 @@ AM.queueDownload("./img/hero.png");
 AM.queueDownload("./img/hero_right.png");
 AM.queueDownload("./img/helicopter.png");
 AM.queueDownload("./img/goomba_sheet.png");
+AM.queueDownload("./img/game_over_bg.png");
 
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
