@@ -10,8 +10,14 @@ var gameScore = 0;
 var background_speed = 3;
 var gameEngine = new GameEngine();
 var hero_x = 255;
+var closest_from_right_x = 1000;
+var closest_from_left_x = -1000;
 var closest_from_right_distance = 1000;
 var closest_from_left_distance = 1000;
+var furthest_right_bullet_x = 255;
+var furthest_left_bullet_x = 255;
+var goombas_x = [];
+var index = 0;
 
 function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
@@ -97,6 +103,24 @@ Background.prototype.draw = function () {
 Background.prototype.update = function () {
 };
 
+// collision detection
+function BoundingBox(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+
+    this.left = x;
+    this.top = y;
+    this.right = this.left + width;
+    this.bottom = this.top + height;
+}
+
+BoundingBox.prototype.collide = function (oth) {
+    if (this.right > oth.left && this.left < oth.right && this.top < oth.bottom && this.bottom > oth.top) return true;
+    return false;
+}
+
 function Hero(game, spritesheet) {
     this.leftAnimation = new Animation(spritesheet, 0, 0, 28.28, 31, 0.15, 6, true, false);
     this.rightAnimation = new Animation(AM.getAsset("./img/hero_right.png"), 28.28, 0, 28.28, 31, 0.15, 6, true, true);
@@ -111,6 +135,7 @@ function Hero(game, spritesheet) {
     this.prevTime = this.game.clockTick;
     this.prevTime2 = this.game.clockTick;
     this.ctx = game.ctx;
+    this.boundingbox = new BoundingBox(this.x, this.y, this.leftAnimation.frameWidth, this.leftAnimation.frameHeight);
 }
 
 Hero.prototype.draw = function () {
@@ -177,6 +202,11 @@ function Goomba_right(game, spritesheet) {
     this.Up = false;
     this.xButton = false;
     this.ctx = game.ctx;
+    this.live = true;
+    this.boundingbox = new BoundingBox(this.x, this.y, this.rightAnimation.frameWidth, this.rightAnimation.frameHeight);
+    this.this_index = index;
+    goombas_x.push(this.x);
+    index += 1;
 }
 
 Goomba_right.prototype.draw = function () {
@@ -188,9 +218,20 @@ Goomba_right.prototype.update = function () {
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
     this.x += this.speed;
-    var distance = hero_x - this.x;
-    if (distance < closest_from_right_distance) {
-      closest_from_right_distance = distance;
+    this.boundingbox.x += this.speed;
+    //goombas_x[this_index] = this.x;
+    // var distance = hero_x - this.x;
+    // if (distance < closest_from_left_distance) {
+    //   closest_from_left_distance = distance;
+    //   closest_from_left_x = this.x;
+    //   //console.log(closest_from_right_distance);
+    //   //console.log(closest_from_left_distance);
+    //   if (this.x = furthest_left_bullet_x) {
+    //     this.x = -12000000;
+    //   }
+    // }
+    if (closest_from_right_distance == 0 || closest_from_left_distance == 0) {
+      console.log("GAME OVER");
     }
 }
 
@@ -205,6 +246,11 @@ function Goomba_left(game, spritesheet) {
     this.Up = false;
     this.xButton = false;
     this.ctx = game.ctx;
+    this.live = true;
+    this.boundingbox = new BoundingBox(this.x, this.y, 61.25, 64);
+    this.this_index = index;
+    goombas_x.push(this.x);
+    index += 1;
 }
 
 Goomba_left.prototype.draw = function () {
@@ -216,10 +262,16 @@ Goomba_left.prototype.update = function () {
     //this.x += this.game.clockTick * this.speed;
     //if (this.x > 400) this.x = 0;
     this.x -= this.speed;
-    var distance = this.x - hero_x;
-    if (distance < closest_from_left_distance) {
-      closest_from_left_distance = distance;
-    }
+    this.boundingbox.x -= this.speed;
+    // //goombas_x[this_index] = this.x;
+    // var distance = this.x - hero_x;
+    // if (distance < closest_from_right_distance) {
+    //   closest_from_right_distance = distance;
+    //   closest_from_right_x = this.x;
+    //   if (this.x = furthest_right_bullet_x) {
+    //     this.x = 12000000;
+    //   }
+    // }
 }
 
 function Bullet_left(game) {
@@ -231,6 +283,8 @@ function Bullet_left(game) {
   this.speed = 3;
   this.game = game;
   this.ctx = game.ctx;
+  this.live = true;
+  this.boundingbox = new BoundingBox(this.x, this.y, this.animation.frameWidth, this.animation.frameHeight);
 }
 
 Bullet_left.prototype.draw = function () {
@@ -238,7 +292,15 @@ Bullet_left.prototype.draw = function () {
 }
 
 Bullet_left.prototype.update = function () {
+    //console.log("Furthest left bullet: " + furthest_left_bullet_x);
     this.x -= this.speed;
+    this.boundingbox.x -= this.speed;
+    // if (this.x < furthest_left_bullet_x) {
+    //   furthest_left_bullet_x = this.x;
+    //   if (furthest_left_bullet_x = closest_from_left_x) {
+    //     this.x = 10000000;
+    //   }
+    // }
 }
 
 function Bullet_right() {
@@ -250,6 +312,8 @@ function Bullet_right() {
   this.speed = 3;
   this.game = gameEngine;
   this.ctx = gameEngine.ctx;
+  this.live = true;
+  this.boundingbox = new BoundingBox(this.x, this.y, this.animation.frameWidth, this.animation.frameHeight);
 }
 
 Bullet_right.prototype.draw = function () {
@@ -257,7 +321,16 @@ Bullet_right.prototype.draw = function () {
 }
 
 Bullet_right.prototype.update = function () {
+
     this.x += this.speed;
+    this.boundingbox.x += this.speed;
+    // if (this.x > furthest_right_bullet_x) {
+    //   console.log("New Furthest right bullet: " + furthest_right_bullet_x);
+    //   furthest_right_bullet_x = this.x;
+    //   if (furthest_right_bullet_x = closest_from_right_x) {
+    //     this.x = -10000000;
+    //   }
+    // }
 }
 
 function Helicopter(game, spritesheet) {
